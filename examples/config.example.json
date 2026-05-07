@@ -1,7 +1,7 @@
 {
   "sound": {
     "enabled": true,
-    "file": "~/Library/Sounds/Applause.aiff"
+    "file": "/System/Library/Sounds/Hero.aiff"
   },
   "terminal": {
     "app_name": "Ghostty",

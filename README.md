@@ -104,15 +104,15 @@ Environment overrides (precedence: env > config file > defaults):
 
 ### Replacing the sound
 
-The default config points at `~/Library/Sounds/Applause.aiff`. To produce that file from your own iMovie installation:
+The default config points at the system-bundled `Hero.aiff` so it works out of the box on any Mac. To use any other audio file, just edit `sound.file`. Any format `afplay` accepts works (`.aiff`, `.wav`, `.mp3`, `.caf`, `.m4a`).
+
+For a more festive applause clip, you can extract one from your own iMovie installation:
 
 ```bash
 bash bin/extract_applause.sh
 ```
 
-This pulls a 3-second slice from the middle of `Stadium Crowd Applause.caf` (Apple's iLife Sound Effects, included with iMovie) and writes it to `~/Library/Sounds/Applause.aiff`. **Nothing copyrighted is shipped in this repo** — the script only touches files that are already on your machine.
-
-To use any other audio file, just point `sound.file` at it. Any format `afplay` accepts works.
+This pulls a 3-second slice from the middle of `Stadium Crowd Applause.caf` (Apple's iLife Sound Effects, bundled with iMovie) and writes it to `~/Library/Sounds/Applause.aiff`. **Nothing copyrighted is shipped in this repo** — the script only operates on files already on your machine. After running it, point `sound.file` at the generated path.
 
 ### Disabling sound
 
@@ -242,15 +242,15 @@ bash install.sh
 
 ### 换声音
 
-默认配置指向 `~/Library/Sounds/Applause.aiff`。从你本机的 iMovie 提取这个文件：
+默认配置指向系统自带的 `Hero.aiff`，开箱即用任何 Mac 都有。要换成别的声音，编辑 `sound.file` 指向任意 `.aiff/.wav/.mp3/.caf/.m4a`（afplay 支持的都行）。
+
+想要更有仪式感的「全场鼓掌」音效，可以从你本机的 iMovie 提取一段：
 
 ```bash
 bash bin/extract_applause.sh
 ```
 
-脚本从 `Stadium Crowd Applause.caf`（Apple 在 iMovie 里附带的 iLife Sound Effects）截取中间最热烈的 3 秒，输出到 `~/Library/Sounds/Applause.aiff`。**仓库本身不携带任何版权素材**，脚本只操作你机器上已有的文件。
-
-想换成别的声音，把 `sound.file` 指向任意 `.aiff/.wav/.mp3` 即可（afplay 支持的都行）。
+脚本从 `Stadium Crowd Applause.caf`（Apple 在 iMovie 里附带的 iLife Sound Effects）截取中间最热烈的 3 秒，输出到 `~/Library/Sounds/Applause.aiff`。**仓库本身不携带任何版权素材**，脚本只操作你机器上已有的文件。生成后把 `sound.file` 指向那个路径即可。
 
 ### 关声音
 
