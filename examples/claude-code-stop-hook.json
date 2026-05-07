@@ -1,0 +1,15 @@
+{
+  "_comment": "Snippet to merge into ~/.claude/settings.json under hooks.Stop[].hooks[]",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/opt/homebrew/bin/python3 /Users/YOUR_USERNAME/.local/bin/coding-done-alert"
+          }
+        ]
+      }
+    ]
+  }
+}

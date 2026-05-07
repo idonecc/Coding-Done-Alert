@@ -1,0 +1,17 @@
+{
+  "sound": {
+    "enabled": true,
+    "file": "~/Library/Sounds/Applause.aiff"
+  },
+  "terminal": {
+    "app_name": "Ghostty",
+    "bundle_id": "com.mitchellh.ghostty"
+  },
+  "zellij": {
+    "bin": "/opt/homebrew/bin/zellij"
+  },
+  "hammerspoon": {
+    "bin": "/opt/homebrew/bin/hs",
+    "call_timeout_sec": 8
+  }
+}

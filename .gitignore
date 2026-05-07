@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Local config / runtime
+*.local
+*.log
+/tmp/
+
+# Editor
+.vscode/
+.idea/
+
+# Sound files (large, version-controlled separately if needed)
+assets/*.aiff
+assets/*.caf
+assets/*.wav
+assets/*.mp3

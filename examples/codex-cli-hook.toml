@@ -1,0 +1,13 @@
+# Snippet for OpenAI Codex CLI (or any tool with a post-task lifecycle hook).
+# Codex's exact hook syntax may differ; treat this as conceptual guidance.
+#
+# When your AI coding session ends, invoke the notifier and pass any context
+# to it on stdin (the tool reads {"last_assistant_message": "..."} if given).
+
+[hooks.task_complete]
+command = "/opt/homebrew/bin/python3"
+args = ["/Users/YOUR_USERNAME/.local/bin/coding-done-alert"]
+
+# To pipe a custom summary, write your own wrapper:
+#   #!/bin/sh
+#   echo "{\"last_assistant_message\":\"$1\"}" | /opt/homebrew/bin/python3 ~/.local/bin/coding-done-alert
