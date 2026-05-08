@@ -1,8 +1,28 @@
 # Coding-Done-Alert
 
+[![License: MIT](https://img.shields.io/github/license/idonecc/Coding-Done-Alert?style=flat-square)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/idonecc/Coding-Done-Alert?style=flat-square)](https://github.com/idonecc/Coding-Done-Alert/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/idonecc/Coding-Done-Alert?style=flat-square)](https://github.com/idonecc/Coding-Done-Alert/issues)
+[![Repo size](https://img.shields.io/github/repo-size/idonecc/Coding-Done-Alert?style=flat-square)](https://github.com/idonecc/Coding-Done-Alert)
+[![macOS](https://img.shields.io/badge/macOS-11%2B-blue?style=flat-square&logo=apple)](https://www.apple.com/macos/)
+
 > macOS banner + applause + click-to-jump for long-running terminal tasks. Designed for Claude Code, Codex CLI, or any agentic CLI that wants to stop interrupting your flow.
 
 [English](#english) · [中文](#中文)
+
+## Demo
+
+<!--
+Drop a screenshot or short GIF showing the banner appearing and the click-to-jump
+behaviour. Suggested capture: terminal in pane A → trigger a long task → switch
+to Chrome on a different Space → banner pops → click → Ghostty pulled forward
+across Spaces and zellij focused on pane A.
+
+Recommended path: docs/screenshots/banner.png   (or banner.gif)
+Reference here as: ![Demo](docs/screenshots/banner.png)
+-->
+
+> _Demo screenshot/GIF coming soon — drop yours at `docs/screenshots/banner.png` and update this section._
 
 ---
 
@@ -106,7 +126,18 @@ Environment overrides (precedence: env > config file > defaults):
 
 The default config points at the system-bundled `Hero.aiff` so it works out of the box on any Mac. To use any other audio file, just edit `sound.file`. Any format `afplay` accepts works (`.aiff`, `.wav`, `.mp3`, `.caf`, `.m4a`).
 
-For a more festive applause clip, you can extract one from your own iMovie installation:
+**Drop in any mp3 / wav (3 lines):**
+
+```bash
+mkdir -p ~/Library/Sounds                                            # only needed once
+cp /path/to/your-cue.mp3 ~/Library/Sounds/                           # any name, any format
+sed -i '' 's|"file": ".*"|"file": "~/Library/Sounds/your-cue.mp3"|' \
+    ~/.config/coding-done-alert/config.json
+```
+
+(Or just edit the JSON in your editor — sed is for the lazy.)
+
+**For a more festive applause clip**, you can extract one from your own iMovie installation:
 
 ```bash
 bash bin/extract_applause.sh
@@ -244,7 +275,18 @@ bash install.sh
 
 默认配置指向系统自带的 `Hero.aiff`，开箱即用任何 Mac 都有。要换成别的声音，编辑 `sound.file` 指向任意 `.aiff/.wav/.mp3/.caf/.m4a`（afplay 支持的都行）。
 
-想要更有仪式感的「全场鼓掌」音效，可以从你本机的 iMovie 提取一段：
+**接进任意 mp3 / wav（三行）：**
+
+```bash
+mkdir -p ~/Library/Sounds                                            # 只需一次
+cp /path/to/你的提示音.mp3 ~/Library/Sounds/                         # 任意名字、任意格式
+sed -i '' 's|"file": ".*"|"file": "~/Library/Sounds/你的提示音.mp3"|' \
+    ~/.config/coding-done-alert/config.json
+```
+
+（懒得敲 sed 也可以直接打开 JSON 改。）
+
+**想要更有仪式感的「全场鼓掌」音效**，可以从你本机的 iMovie 提取一段：
 
 ```bash
 bash bin/extract_applause.sh
