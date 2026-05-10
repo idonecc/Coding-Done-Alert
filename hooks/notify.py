@@ -12,6 +12,14 @@ Why Hammerspoon: macOS 26 (Tahoe) silently drops banners from terminal-notifier
 (2017 build) and refuses UNUserNotificationCenter authorisation for ad-hoc
 signed binaries. Hammerspoon.app is properly signed and exposes hs.notify with
 a working click callback (when invoked via hs.task — hs.execute hangs).
+
+Cross-Space click-to-jump (v0.2.0+): the click command runs `yabai -m window
+--focus <id>` first to pull the right Ghostty window forward across Spaces,
+then `zellij action focus-pane-id <N>` to land on the exact pane. The yabai
+window id is read from /tmp/zellij_yabai/<session>, written there by a zsh
+precmd hook (see hooks/zsh_precmd_record.sh). Without yabai installed the
+command degrades gracefully to zellij-only — same-Space focus still works.
+
 See docs/ARCHITECTURE.md for the full rationale.
 """
 from __future__ import annotations
@@ -39,6 +47,10 @@ DEFAULT_CONFIG = {
     },
     "zellij": {
         "bin": "/opt/homebrew/bin/zellij",
+    },
+    "yabai": {
+        "bin": "/opt/homebrew/bin/yabai",
+        "window_map_dir": "/tmp/zellij_yabai",
     },
     "hammerspoon": {
         "bin": "/opt/homebrew/bin/hs",
@@ -116,15 +128,32 @@ def get_zellij_pane_title(cfg: dict, session: str, pane_id: str) -> str:
 def build_click_command(cfg: dict, session: str, pane_id: str) -> str:
     """The shell command that runs when user clicks the banner.
 
-    Note: terminal app activation (and cross-Space switching) is handled by
-    Hammerspoon's hs.application:activate(true) inside the Lua module — not
-    here. This command only carries the zellij focus instruction.
+    Cross-Space pull (v0.2.0+): if a yabai window id mapping exists in
+    {window_map_dir}/<session>, run `yabai -m window --focus <id>` first to
+    drag the matching terminal window forward across Spaces. Then run
+    `zellij action focus-pane-id` to land on the specific pane.
+
+    The yabai segment is fully optional: missing binary, missing mapping, or
+    stale id all degrade silently and the zellij focus still runs. Same-Space
+    behaviour is therefore preserved without yabai.
     """
     if not session or not pane_id:
         return ""
+
+    map_file = shlex.quote(
+        os.path.join(cfg["yabai"]["window_map_dir"], session)
+    )
+    yabai_bin = shlex.quote(cfg["yabai"]["bin"])
+    sess = shlex.quote(session)
+    pid = shlex.quote(str(pane_id))
+    zellij_bin = shlex.quote(cfg["zellij"]["bin"])
+
     return (
-        f"{cfg['zellij']['bin']} --session {shlex.quote(session)} "
-        f"action focus-pane-id {shlex.quote(str(pane_id))}"
+        f"WID=$(cat {map_file} 2>/dev/null); "
+        f'if [ -n "$WID" ] && [ -x {yabai_bin} ]; then '
+        f'  {yabai_bin} -m window --focus "$WID" 2>/dev/null; '
+        f"fi; "
+        f"{zellij_bin} --session {sess} action focus-pane-id {pid}"
     )
 
 

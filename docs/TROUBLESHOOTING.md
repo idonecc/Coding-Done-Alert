@@ -34,19 +34,46 @@ tail -f /tmp/coding_done_alert.log
 1. Tail the log while clicking: `tail -f /tmp/coding_done_alert.log`. You should see `CALLBACK` rows.
 2. If you see `CALLBACK` but no `TASK_DONE`: the cmd is invalid. The log line directly above shows what was attempted.
 3. If `TASK_DONE | exit=2` and your terminal is zellij, check the zellij version: `zellij --version`. Versions older than 0.44 use a different subcommand name.
-4. Run the click cmd manually in any shell to see the real error:
+4. v0.2.0+ logs full stderr in the `TASK_DONE` line — read `stderr=[...]` directly instead of re-running by hand.
+5. `Pane Terminal(N) is already focused` is success — see "exit=2 is expected after a yabai pull" below.
+
+### Click works but doesn't switch Spaces (v0.2.0+, yabai path)
+
+If the banner appears, click is registered (`CALLBACK` in log), but the wrong Space stays visible:
+
+1. **Mapping file present?**
    ```bash
-   /opt/homebrew/bin/zellij --session "$ZELLIJ_SESSION_NAME" action focus-pane-id "$ZELLIJ_PANE_ID"
+   cat /tmp/zellij_yabai/<session_name>
    ```
-   `Pane Terminal(N) is already focused` is success when N is the current pane — it's just a no-op.
+   Empty / missing → the zsh precmd hook hasn't written the mapping. Open the affected zellij session, hit Enter once at any zsh prompt, re-check.
+2. **Hook actually loaded?** From a zsh prompt inside zellij:
+   ```bash
+   typeset -f _coding_done_alert_record_window
+   ```
+   Empty output → `~/.zshrc` doesn't `source hooks/zsh_precmd_record.sh`. Re-run `install.sh` or add it manually.
+3. **yabai healthy?**
+   ```bash
+   yabai -m query --windows | head
+   ```
+   Errors here mean yabai itself is broken — see "yabai errors" below.
+4. **Stale window id?** Ghostty was closed and reopened, but the mapping still points at the old id. Trigger a refresh: focus the affected zellij pane, press Enter at zsh, check the file mtime updated.
 
-### Click works but doesn't switch Spaces
+### Click works but doesn't switch Spaces (legacy, no yabai)
 
-This was the original symptom that drove choosing `hs.application:activate(true)` over `osascript`. If you still hit it:
+Without yabai cross-Space pull is impossible on macOS 26 — `hs.spaces` is dead and `app:activate(true)` doesn't switch desktops. The notifier degrades to a same-Space-only tool. If you need cross-Space, install yabai (see `docs/INSTALL.md` step 0).
 
-1. Verify `coding_done_alert.lua` contains `app:activate(true)` (with `true`).
-2. The terminal app must already be running. If not, `hs.task.new("/usr/bin/open", nil, {"-a", terminalApp}):start()` is used as fallback, which honors macOS Space-switching settings.
-3. Check System Settings → Desktop & Dock → Mission Control → ensure "When switching to an application, switch to a Space with open windows for the application" is **on** (it should be on by default).
+### `TASK_DONE | exit=2 stderr=[Pane Terminal(N) is already focused ...]`
+
+**This is success, not failure.** After a successful `yabai -m window --focus`, the zellij client at the target window already has the right pane focused, so the subsequent `zellij ... focus-pane-id N` is a no-op and zellij returns exit 2 to say "nothing to do". Don't treat this as an error.
+
+### yabai errors
+
+| Error | Cause | Fix |
+| --- | --- | --- |
+| `yabai: missing required nvram boot-arg '-arm64e_preview_abi'!` | NVRAM boot-arg not set or not yet in effect (Apple Silicon) | `sudo nvram boot-args=-arm64e_preview_abi` then **reboot** |
+| `Could not load scripting addition payload` (after macOS minor update) | SA invalidated by system update | `sudo yabai --uninstall-sa && sudo yabai --load-sa` |
+| `error: yabai is not running` | launchd service not started | `yabai --start-service` |
+| Permission denied / no AX response | yabai missing Accessibility permission | System Settings → Privacy & Security → Accessibility → toggle yabai on |
 
 ### `hs -c` hangs
 
@@ -95,19 +122,46 @@ tail -f /tmp/coding_done_alert.log
 1. 边点边看日志：`tail -f /tmp/coding_done_alert.log`，应该看到 `CALLBACK` 行
 2. 看到 `CALLBACK` 但没 `TASK_DONE`：cmd 无效。上面那条 log 显示尝试执行的内容
 3. `TASK_DONE | exit=2` + 用 zellij：检查 zellij 版本 `zellij --version`。0.44 以下子命令名不一样
-4. 在普通 shell 里手动跑一次 click cmd 看真实错误：
+4. v0.2.0+ 已经把完整 stderr 写进 `TASK_DONE` 行 — 直接看 `stderr=[...]`，不用再手动复跑命令
+5. `Pane Terminal(N) is already focused` 是成功 — 见下面「yabai 拉窗口后 exit=2 是预期」
+
+### 点击有效但不跨 Space（v0.2.0+，yabai 路径）
+
+横幅弹了，点击被记录了（log 有 `CALLBACK`），但桌面没切：
+
+1. **映射文件存在吗？**
    ```bash
-   /opt/homebrew/bin/zellij --session "$ZELLIJ_SESSION_NAME" action focus-pane-id "$ZELLIJ_PANE_ID"
+   cat /tmp/zellij_yabai/<session 名>
    ```
-   `Pane Terminal(N) is already focused` 是成功 — 只是当前已经在那个 pane，等价于 no-op
+   空 / 不存在 → zsh precmd hook 没写映射。打开受影响的 zellij session，在任何 zsh prompt 按一次回车，再次检查
+2. **hook 真的加载了吗？** 在 zellij 里的 zsh prompt 跑：
+   ```bash
+   typeset -f _coding_done_alert_record_window
+   ```
+   输出为空 → `~/.zshrc` 里没 `source hooks/zsh_precmd_record.sh`。重跑 `install.sh` 或手动加
+3. **yabai 健康吗？**
+   ```bash
+   yabai -m query --windows | head
+   ```
+   这里报错说明 yabai 本身坏了 — 见下面「yabai 错误」
+4. **窗口 id stale？** Ghostty 被关了重开，但映射还指向旧 id。触发刷新：focus 受影响的 zellij pane，在 zsh 按回车，检查文件 mtime 是否更新
 
-### 点击有效但不跨 Space
+### 点击有效但不跨 Space（旧版，没装 yabai）
 
-这正是当初放弃 `osascript` 选 `hs.application:activate(true)` 的核心原因。如果还是不切：
+不装 yabai，跨 Space 在 macOS 26 上不可能 — `hs.spaces` 已死，`app:activate(true)` 也不切桌面。本工具会优雅降级为「只在当前可见 Space 内 focus」的工具。如果需要跨 Space，装 yabai（见 `docs/INSTALL.md` 步骤 0）。
 
-1. 确认 `coding_done_alert.lua` 里是 `app:activate(true)`（带 `true`）
-2. 终端 app 必须已经在跑。没跑会 fallback 到 `open -a`，那条路径遵守 macOS 系统设置
-3. 系统设置 → 桌面与程序坞 → 调度中心 → 确认「切换到某个应用时，切换到具有该应用打开窗口的空间」**打开**（默认开着）
+### `TASK_DONE | exit=2 stderr=[Pane Terminal(N) is already focused ...]`
+
+**这是成功，不是失败。** yabai 切完窗口后，目标窗口的 zellij client 已经在对的 pane 上，所以后续的 `zellij ... focus-pane-id N` 是 no-op，zellij 用 exit 2 表达「无事可做」。不要把这条当作错误。
+
+### yabai 错误
+
+| 错误 | 原因 | 修复 |
+| --- | --- | --- |
+| `yabai: missing required nvram boot-arg '-arm64e_preview_abi'!` | NVRAM boot-arg 没设或还没生效（Apple Silicon） | `sudo nvram boot-args=-arm64e_preview_abi` 然后**重启** |
+| `Could not load scripting addition payload`（macOS 小版本升级后） | SA 被系统升级失效 | `sudo yabai --uninstall-sa && sudo yabai --load-sa` |
+| `error: yabai is not running` | launchd 服务没起 | `yabai --start-service` |
+| 权限被拒 / AX 不响应 | yabai 没拿到辅助功能权限 | 系统设置 → 隐私与安全性 → 辅助功能 → 勾上 yabai |
 
 ### `hs -c` 卡住
 
